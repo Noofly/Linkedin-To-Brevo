@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn → Brevo",
+  "version": "0.1.0",
+  "description": "Ajoute un contact LinkedIn / Sales Navigator dans Brevo et enrichit sa société (effectif, CA, procédure collective, siège).",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://api.brevo.com/*",
+    "https://recherche-entreprises.api.gouv.fr/*",
+    "https://bodacc-datadila.opendatasoft.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["src/content/loader.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/content/*", "src/lib/*"],
+      "matches": ["https://www.linkedin.com/*"]
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_title": "LinkedIn → Brevo : options"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "linkedin-brevo-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extension Chrome : LinkedIn / Sales Navigator → Brevo",
+  "scripts": {
+    "test": "node --test"
+  }
+}

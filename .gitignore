@@ -1,0 +1,17 @@
+# Demandé : outils locaux et cahier des charges
+tools/
+requirements.txt
+
+# Config MCP locale (chrome-devtools pour les tests)
+.mcp.json
+
+# Dépendances / environnement
+node_modules/
+.env
+.env.*
+
+# Système / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
