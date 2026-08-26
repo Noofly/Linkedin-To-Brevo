@@ -1,6 +1,7 @@
 // Orchestrateur : reçoit ADD_CONTACT du content script, pilote Brevo / annuaire / site web, ouvre la fiche Brevo
 import {
   BrevoClient,
+  CONTACT_ATTRS_CACHE_KEY,
   buildCompanyAttributes,
   contactUrl,
   ensureContactAttributes,
@@ -49,11 +50,11 @@ async function handleAddContact(profile, tabId) {
 
   // 1. Attributs Brevo
   report('prepare', 'running', 'Vérification des attributs Brevo…');
-  let contactAttrs = await getCache('contactAttrs');
+  let contactAttrs = await getCache(CONTACT_ATTRS_CACHE_KEY);
   if (!contactAttrs) {
     const { map, created } = await ensureContactAttributes(client, { create: settings.autoCreateAttributes });
     contactAttrs = map;
-    await setCache('contactAttrs', map);
+    await setCache(CONTACT_ATTRS_CACHE_KEY, map);
     if (created.length) warnings.push(`Attributs contact créés dans Brevo : ${created.join(', ')}`);
   }
   let companyAttrDefs = await getCache('companyAttrs');
@@ -135,6 +136,8 @@ async function handleAddContact(profile, tabId) {
     qualified,
     companyPhone,
     linkedin: profile.url,
+    // Booléen Brevo TUTOIEMENT : faux par défaut, coché dans le panneau si le contact se tutoie
+    tutoiement: Boolean(profile.tutoiement),
   };
   const attributes = {};
   for (const [field, val] of Object.entries(attrValues)) {

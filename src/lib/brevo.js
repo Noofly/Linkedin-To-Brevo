@@ -77,6 +77,11 @@ export class BrevoClient {
     return this.request('PUT', `/contacts/${encodeURIComponent(id)}`, body);
   }
 
+  listContacts(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return this.request('GET', `/contacts${qs ? '?' + qs : ''}`);
+  }
+
   // ----- Sociétés -----
   getCompanyAttributes() {
     return this.request('GET', '/crm/attributes/companies');
@@ -122,7 +127,11 @@ export const CONTACT_FIELDS = {
   qualified: { label: 'Qualifié', candidates: ['QUALIFIE', 'QUALIFIED'], create: { name: 'QUALIFIE', type: 'text' } },
   companyPhone: { label: 'Téléphone société', candidates: ['TELEPHONE_SOCIETE', 'TEL_SOCIETE', 'COMPANY_PHONE'], create: { name: 'TELEPHONE_SOCIETE', type: 'text' } },
   linkedin: { label: 'URL LinkedIn', candidates: ['LINKEDIN', 'LINKEDIN_URL', 'URL_LINKEDIN'], create: { name: 'LINKEDIN', type: 'text' } },
+  tutoiement: { label: 'Tutoiement', candidates: ['TUTOIEMENT', 'TUTOIE', 'TUTOYER'], create: { name: 'TUTOIEMENT', type: 'boolean' } },
 };
+
+// Clé de cache des attributs contact : change dès qu'un champ est ajouté ici, pour ne pas servir une carte périmée
+export const CONTACT_ATTRS_CACHE_KEY = `contactAttrs:${Object.keys(CONTACT_FIELDS).join(',')}`;
 
 export function resolveContactAttributes(attrs = []) {
   const map = {};
@@ -158,17 +167,35 @@ export async function ensureContactAttributes(client, { create = true } = {}) {
 
 export function formatContactValue(attr, value) {
   if (value == null || value === '') return null;
+  if (attr.type === 'boolean') return typeof value === 'boolean' ? value : /^(oui|yes|true|1)$/i.test(String(value));
+  if (typeof value === 'boolean') value = value ? 'Oui' : 'Non';
   if (attr.category === 'category' && Array.isArray(attr.enumeration)) {
     const k = normKey(value);
     const e = attr.enumeration.find((x) => normKey(x.label) === k);
     return e ? e.value : null;
   }
-  if (attr.type === 'boolean') return /^(oui|yes|true|1)$/i.test(String(value));
   if (attr.type === 'float') {
     const n = Number(value);
     return Number.isFinite(n) ? n : null;
   }
   return String(value);
+}
+
+/** Tous les contacts du compte (l'API pagine par 50 au maximum). `onPage(chargés, total)` pour l'avancement. */
+export async function listAllContacts(client, { pageSize = 50, onPage } = {}) {
+  const out = [];
+  let offset = 0;
+  let total = Infinity;
+  while (offset < total) {
+    const d = await client.listContacts({ limit: pageSize, offset, sort: 'asc' });
+    const items = d?.contacts || [];
+    total = typeof d?.count === 'number' ? d.count : offset + items.length;
+    out.push(...items);
+    onPage?.(out.length, total);
+    if (!items.length) break;
+    offset += items.length;
+  }
+  return out;
 }
 
 // ---------- Sociétés ----------

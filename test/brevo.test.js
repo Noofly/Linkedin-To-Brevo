@@ -6,14 +6,16 @@ import {
   contactUrl,
   findCompany,
   formatContactValue,
+  listAllContacts,
   resolveCompanyAttributes,
   resolveContactAttributes,
 } from '../src/lib/brevo.js';
 
 test('resolveContactAttributes accepte PRENOM/NOM ou FIRSTNAME/LASTNAME', () => {
-  const fr = resolveContactAttributes([{ name: 'PRENOM' }, { name: 'NOM' }, { name: 'QUALIFIÉ', category: 'category' }]);
+  const fr = resolveContactAttributes([{ name: 'PRENOM' }, { name: 'NOM' }, { name: 'QUALIFIÉ', category: 'category' }, { name: 'TUTOIEMENT', type: 'boolean' }]);
   assert.equal(fr.firstName.name, 'PRENOM');
   assert.equal(fr.qualified.name, 'QUALIFIÉ');
+  assert.equal(fr.tutoiement.name, 'TUTOIEMENT');
   const en = resolveContactAttributes([{ name: 'FIRSTNAME' }, { name: 'LASTNAME' }]);
   assert.equal(en.lastName.name, 'LASTNAME');
   assert.equal(en.company, undefined);
@@ -26,6 +28,28 @@ test('formatContactValue selon le type', () => {
   assert.equal(formatContactValue({ type: 'boolean' }, 'Non'), false);
   assert.equal(formatContactValue({ type: 'float' }, '12'), 12);
   assert.equal(formatContactValue({ type: 'text' }, ''), null);
+  // Booléens JS (tutoiement) : conservés tels quels pour un attribut boolean, Oui/Non sinon
+  assert.equal(formatContactValue({ type: 'boolean' }, false), false);
+  assert.equal(formatContactValue({ type: 'boolean' }, true), true);
+  assert.equal(formatContactValue({ type: 'text' }, false), 'Non');
+  assert.equal(formatContactValue({ category: 'category', enumeration: [{ value: 1, label: 'Oui' }, { value: 2, label: 'Non' }] }, true), 1);
+});
+
+test('listAllContacts : pagination par offset jusqu\'au total', async () => {
+  const all = Array.from({ length: 7 }, (_, i) => ({ id: i + 1 }));
+  const calls = [];
+  const client = {
+    listContacts: async ({ limit, offset }) => {
+      calls.push(offset);
+      return { contacts: all.slice(offset, offset + limit), count: all.length };
+    },
+  };
+  const pages = [];
+  const res = await listAllContacts(client, { pageSize: 3, onPage: (n, total) => pages.push(`${n}/${total}`) });
+  assert.deepEqual(res.map((c) => c.id), [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(calls, [0, 3, 6]);
+  assert.deepEqual(pages, ['3/7', '6/7', '7/7']);
+  assert.deepEqual(await listAllContacts({ listContacts: async () => ({ contacts: [], count: 0 }) }), []);
 });
 
 const companyDefs = [

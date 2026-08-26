@@ -19,6 +19,7 @@ const FIELDS = [
   ['phone', 'Téléphone'],
   ['companyWebsite', 'Site web société'],
   ['language', 'Langue'],
+  ['tutoiement', 'Tutoiement', 'checkbox'],
 ];
 
 const ICONS = { pending: '○', running: '◌', done: '✓', warn: '!', error: '✕' };
@@ -63,8 +64,8 @@ export class Panel {
 
     this.form = el('form', { class: 'lb-form', onsubmit: (e) => this.handleSubmit(e) });
     this.inputs = {};
-    for (const [name, label] of FIELDS) {
-      const input = el('input', { name, type: name === 'email' ? 'email' : 'text', autocomplete: 'off', spellcheck: 'false' });
+    for (const [name, label, type = 'text'] of FIELDS) {
+      const input = el('input', { name, type: name === 'email' ? 'email' : type, autocomplete: 'off', spellcheck: 'false' });
       this.inputs[name] = input;
       this.form.append(el('label', {}, [el('span', { text: label }), input]));
     }
@@ -120,7 +121,10 @@ export class Panel {
     this.resultEl.classList.add('lb-hidden');
     this.stepsEl.classList.add('lb-hidden');
     this.form.classList.remove('lb-hidden');
-    for (const [name] of FIELDS) this.inputs[name].value = profile[name] || '';
+    for (const [name, , type] of FIELDS) {
+      if (type === 'checkbox') this.inputs[name].checked = Boolean(profile[name]);
+      else this.inputs[name].value = profile[name] || '';
+    }
     this.hidden = {
       source: profile.source,
       url: profile.url,
@@ -131,7 +135,7 @@ export class Panel {
 
   readForm() {
     const p = { ...this.hidden };
-    for (const [name] of FIELDS) p[name] = this.inputs[name].value.trim();
+    for (const [name, , type] of FIELDS) p[name] = type === 'checkbox' ? this.inputs[name].checked : this.inputs[name].value.trim();
     return p;
   }
 

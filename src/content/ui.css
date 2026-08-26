@@ -122,6 +122,13 @@
 .lb-form input:disabled {
   background: #f6f8fa;
 }
+.lb-form input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  justify-self: start;
+}
 .lb-actions {
   display: flex;
   justify-content: flex-end;

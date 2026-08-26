@@ -27,11 +27,48 @@
         margin: 10px 0;
       }
       input[type="text"],
-      input[type="password"] {
+      input[type="password"],
+      input[type="number"] {
         font: inherit;
         padding: 6px 8px;
         border: 1px solid #d0d7de;
         border-radius: 6px;
+      }
+      input[type="number"] {
+        width: 90px;
+      }
+      .st-written {
+        color: #0b996f;
+      }
+      .st-proposed {
+        color: #9a6700;
+      }
+      .st-none,
+      .st-error {
+        color: #b42318;
+      }
+      .st-skipped,
+      .st-running {
+        color: #57606a;
+      }
+      ul.cands {
+        margin: 4px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      ul.cands li {
+        margin: 3px 0;
+      }
+      ul.cands button {
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      td small {
+        color: #57606a;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
       }
       button {
         font: inherit;
@@ -114,6 +151,27 @@
     <div class="msg" id="msg"></div>
 
     <div id="attrs"></div>
+
+    <h2>Mise à jour des contacts existants</h2>
+    <p>
+      <small>
+        Pour chaque contact Brevo sans <code>LINKEDIN</code> : URL reconstruite depuis <code>EXT_ID</code> (contacts créés par
+        l'extension), sinon recherche LinkedIn « Prénom Nom Société » puis « Prénom Nom ». Vous devez être connecté à LinkedIn dans
+        ce navigateur. Les correspondances sûres (nom identique et société confirmée) sont enregistrées directement ; les autres vous
+        sont proposées avec un bouton « Utiliser ». Les recherches sont espacées de quelques secondes pour respecter les limites
+        LinkedIn.
+      </small>
+    </p>
+    <label>
+      <span>Recherches LinkedIn max. par passage</span>
+      <input type="number" id="maxSearches" value="50" min="1" max="500" />
+    </label>
+    <div class="row">
+      <button class="primary" id="updateLinkedin">Rechercher les URL LinkedIn manquantes</button>
+      <button id="stopUpdate" hidden>Arrêter</button>
+    </div>
+    <div class="msg" id="updMsg"></div>
+    <div id="updResults"></div>
 
     <script type="module" src="options.js"></script>
   </body>
